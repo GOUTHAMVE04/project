@@ -109,7 +109,8 @@ Abstracts model-specific variations (SmolVLM, LLaVA, Qwen2-VL, Moondream2) behin
 **File Path**: [`perturbations/visual_perturbation.py`](file:///c:/Users/HP/OneDrive/Desktop/project/perturbations/visual_perturbation.py)
 
 #### Purpose & Algorithmic Design
-Implements image distortion strategies needed to create perturbed visual evidence $V_{\text{pert}}$. When visual evidence is distorted, true visual features degrade, causing the model to fall back on language priors. Subtracting these logits isolates visually grounded tokens.
+Implements image distortion strategies needed to create perturbed visual evidence $V_{\text{pert}}$. When visual evidence is 
+distorted, true visual features degrade, causing the model to fall back on language priors. Subtracting these logits isolates visually grounded tokens.
 
 #### Key Methods:
 

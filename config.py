@@ -15,7 +15,12 @@ class Config:
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
     DTYPE = torch.float16 if torch.cuda.is_available() else torch.float32
 
-    # RQ3 Contrastive Decoding Hyperparameters
+    # ICD (Instruction Contrastive Decoding, Wang et al., ACL 2024) Hyperparameters
+    ICD_LAMBDA = 1.0       # Contrastive penalty weight (lambda) for disturbance instruction
+    ICD_BETA = 0.1         # Adaptive candidate cutoff threshold (beta)
+    DISTURBANCE_INSTRUCTION = "You are a confused object detector with severe hallucination bias."
+
+    # Visual Perturbation Hyperparameters (Dual Contrast ICD + VCD)
     VCD_ALPHA = 1.0        # Contrastive amplification coefficient
     VCD_BETA = 0.1         # Adaptive candidate cutoff threshold
     NOISE_STD = 0.5        # Gaussian noise standard deviation for visual perturbation

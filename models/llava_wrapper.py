@@ -34,16 +34,18 @@ class VLMModelWrapper:
                     self.model = LlavaForConditionalGeneration.from_pretrained(model_id, torch_dtype=dtype, low_cpu_mem_usage=True, device_map=device if device != "cpu" else None)
             self.model.eval()
 
-    def format_prompt(self, question: str) -> str:
+    def format_prompt(self, question: str, is_disturbance: bool = False) -> str:
+        if is_disturbance:
+            return f"<image>User: {Config.DISTURBANCE_INSTRUCTION} {question}\nAssistant:"
         return f"<image>User: {question}\nAssistant:"
 
-    def process_inputs(self, image: Image.Image, question: str) -> Dict[str, torch.Tensor]:
+    def process_inputs(self, image: Image.Image, question: str, is_disturbance: bool = False) -> Dict[str, torch.Tensor]:
         if self.use_mock:
             return {
                 "input_ids": torch.tensor([[1, 2, 3, 4]], device=self.device),
                 "pixel_values": torch.zeros((1, 3, 224, 224), device=self.device, dtype=self.dtype)
             }
-        prompt = self.format_prompt(question)
+        prompt = self.format_prompt(question, is_disturbance=is_disturbance)
         inputs = self.processor(text=prompt, images=image, return_tensors="pt")
         return {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in inputs.items()}
 

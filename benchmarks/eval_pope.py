@@ -10,14 +10,14 @@ from benchmarks.pope_loader import POPEBenchmarkDataset
 
 class POPEEvaluator:
     """
-    Evaluates VLM hallucination metrics on the POPE benchmark dataset.
-    Compares Standard Baseline LLaVA vs. RQ3 Visual Contrastive Decoding LLaVA.
+    Evaluates VLM hallucination metrics on the POPE benchmark dataset (Li et al., EMNLP 2023).
+    Compares Standard Baseline vs. Instruction Contrastive Decoding (ICD, Wang et al., ACL 2024).
     """
     def __init__(self, pipeline: GroundedVLMInferencePipeline, data_dir: str = Config.BENCHMARK_DIR):
         self.pipeline = pipeline
         self.dataset_loader = POPEBenchmarkDataset(data_dir)
 
-    def evaluate_split(self, split: str = "random", use_rq3: bool = True) -> Dict[str, float]:
+    def evaluate_split(self, split: str = "random", use_icd: bool = True) -> Dict[str, float]:
         """
         Runs evaluation over a POPE split and computes Accuracy, Precision, Recall, F1, and Yes Ratio.
         """
@@ -34,7 +34,7 @@ class POPEEvaluator:
             ground_truth = sample["label"].lower().strip()
 
             # Execute pipeline
-            result = self.pipeline.run_inference(dummy_img, question, use_rq3_grounding=use_rq3)
+            result = self.pipeline.run_inference(dummy_img, question, use_rq3_grounding=use_icd, use_icd=use_icd)
             pred_raw = result["response"].lower().strip()
             
             # Binary parsing of response
@@ -61,7 +61,7 @@ class POPEEvaluator:
 
         metrics = {
             "split": split,
-            "rq3_enabled": use_rq3,
+            "icd_enabled": use_icd,
             "accuracy": round(accuracy * 100, 2),
             "precision": round(precision * 100, 2),
             "recall": round(recall * 100, 2),
@@ -74,17 +74,18 @@ class POPEEvaluator:
 
     def run_full_benchmark(self, splits: List[str] = Config.POPE_SPLITS) -> Dict[str, Any]:
         """
-        Runs full comparison across baseline and RQ3 Grounded VCD.
+        Runs full comparison across baseline and ICD (Instruction Contrastive Decoding).
         """
         full_results = {}
         for split in splits:
             print(f"\n--- Evaluating POPE Split: {split} ---")
-            baseline_metrics = self.evaluate_split(split, use_rq3=False)
-            rq3_metrics = self.evaluate_split(split, use_rq3=True)
+            baseline_metrics = self.evaluate_split(split, use_icd=False)
+            icd_metrics = self.evaluate_split(split, use_icd=True)
             
             full_results[split] = {
                 "baseline": baseline_metrics,
-                "rq3_grounded": rq3_metrics
+                "icd_grounded": icd_metrics,
+                "rq3_grounded": icd_metrics  # backward-compatible key
             }
 
         output_path = os.path.join(Config.RESULTS_DIR, "pope_evaluation_results.json")

@@ -1,0 +1,345 @@
+{
+  "framework": "Instruction Contrastive Decoding (ICD - Wang et al., ACL 2024)",
+  "image_path": "C:\\Users\\HP\\OneDrive\\Desktop\\project\\tree.jpg",
+  "description": "A phone lying on table",
+  "verification": {
+    "model_used": "Proposed Model (Instruction Contrastive Decoding - Wang et al., ACL 2024)",
+    "description": "A phone lying on table",
+    "annotated_description": "A [HALLUCINATED: phone] lying on [HALLUCINATED: table]",
+    "is_hallucinated": true,
+    "verdict": "HALLUCINATED",
+    "hallucination_rate_chair_i": 100.0,
+    "total_claims_checked": 2,
+    "verified_objects": [],
+    "hallucinated_objects": [
+      "phone",
+      "table"
+    ],
+    "methodology": "Instruction Contrastive Decoding (Wang et al., ACL 2024) + POPE (EMNLP 2023) + CHAIR",
+    "claims_breakdown": [
+      {
+        "claimed_object": "phone",
+        "status": "HALLUCINATED_ABSENT",
+        "standard_evidence": 0.0078,
+        "clean_evidence": 0.0078,
+        "absence_evidence": 0.3198,
+        "disturbance_evidence": 0.0416,
+        "perturbed_evidence": 0.0415,
+        "icd_calibrated_score": 22.5387,
+        "calibrated_score": 22.5387,
+        "confidence": 0.0
+      },
+      {
+        "claimed_object": "table",
+        "status": "HALLUCINATED_ABSENT",
+        "standard_evidence": 0.0032,
+        "clean_evidence": 0.0032,
+        "absence_evidence": 0.4815,
+        "disturbance_evidence": 0.0265,
+        "perturbed_evidence": 0.0162,
+        "icd_calibrated_score": 21.7333,
+        "calibrated_score": 21.7333,
+        "confidence": 0.0
+      }
+    ]
+  },
+  "pope_evaluation": {
+    "random": {
+      "split": "random",
+      "total_samples": 8,
+      "TP": 2,
+      "FP": 0,
+      "TN": 6,
+      "FN": 0,
+      "accuracy": 100.0,
+      "precision": 100.0,
+      "recall": 100.0,
+      "f1_score": 100.0,
+      "yes_ratio": 25.0,
+      "per_question": [
+        {
+          "question": "Is there a tree in the image?",
+          "ground_truth": "yes",
+          "model_prediction": "yes",
+          "outcome": "TP",
+          "standard_evidence": 0.5179,
+          "disturbance_evidence": 0.2261,
+          "icd_calibrated_score": 31.4049
+        },
+        {
+          "question": "Is there a grass in the image?",
+          "ground_truth": "yes",
+          "model_prediction": "yes",
+          "outcome": "TP",
+          "standard_evidence": 0.2724,
+          "disturbance_evidence": 0.153,
+          "icd_calibrated_score": 28.7969
+        },
+        {
+          "question": "Is there a elephant in the image?",
+          "ground_truth": "no",
+          "model_prediction": "no",
+          "outcome": "TN",
+          "standard_evidence": 0.0037,
+          "disturbance_evidence": 0.0082,
+          "icd_calibrated_score": 22.7203
+        },
+        {
+          "question": "Is there a giraffe in the image?",
+          "ground_truth": "no",
+          "model_prediction": "no",
+          "outcome": "TN",
+          "standard_evidence": 0.0065,
+          "disturbance_evidence": 0.009,
+          "icd_calibrated_score": 23.9973
+        },
+        {
+          "question": "Is there a airplane in the image?",
+          "ground_truth": "no",
+          "model_prediction": "no",
+          "outcome": "TN",
+          "standard_evidence": 0.0061,
+          "disturbance_evidence": 0.0258,
+          "icd_calibrated_score": 22.5175
+        },
+        {
+          "question": "Is there a helicopter in the image?",
+          "ground_truth": "no",
+          "model_prediction": "no",
+          "outcome": "TN",
+          "standard_evidence": 0.0065,
+          "disturbance_evidence": 0.0352,
+          "icd_calibrated_score": 22.4811
+        },
+        {
+          "question": "Is there a submarine in the image?",
+          "ground_truth": "no",
+          "model_prediction": "no",
+          "outcome": "TN",
+          "standard_evidence": 0.0014,
+          "disturbance_evidence": 0.0231,
+          "icd_calibrated_score": 19.5063
+        },
+        {
+          "question": "Is there a snowboard in the image?",
+          "ground_truth": "no",
+          "model_prediction": "no",
+          "outcome": "TN",
+          "standard_evidence": 0.002,
+          "disturbance_evidence": 0.0127,
+          "icd_calibrated_score": 20.6987
+        }
+      ]
+    },
+    "popular": {
+      "split": "popular",
+      "total_samples": 12,
+      "TP": 0,
+      "FP": 0,
+      "TN": 6,
+      "FN": 6,
+      "accuracy": 50.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0,
+      "yes_ratio": 0.0,
+      "per_question": [
+        {
+          "question": "Is there a cat in the image?",
+          "ground_truth": "yes",
+          "model_prediction": "no",
+          "outcome": "FN",
+          "standard_evidence": 0.0023,
+          "disturbance_evidence": 0.0114,
+          "icd_calibrated_score": 21.792
+        },
+        {
+          "question": "Is there a dog in the image?",
+          "ground_truth": "yes",
+          "model_prediction": "no",
+          "outcome": "FN",
+          "standard_evidence": 0.0051,
+          "disturbance_evidence": 0.0144,
+          "icd_calibrated_score": 22.9293
+        },
+        {
+          "question": "Is there a person in the image?",
+          "ground_truth": "yes",
+          "model_prediction": "no",
+          "outcome": "FN",
+          "standard_evidence": 0.0138,
+          "disturbance_evidence": 0.0373,
+          "icd_calibrated_score": 24.2044
+        },
+        {
+          "question": "Is there a car in the image?",
+          "ground_truth": "yes",
+          "model_prediction": "no",
+          "outcome": "FN",
+          "standard_evidence": 0.0021,
+          "disturbance_evidence": 0.0142,
+          "icd_calibrated_score": 21.4616
+        },
+        {
+          "question": "Is there a bicycle in the image?",
+          "ground_truth": "yes",
+          "model_prediction": "no",
+          "outcome": "FN",
+          "standard_evidence": 0.0179,
+          "disturbance_evidence": 0.0096,
+          "icd_calibrated_score": 25.6897
+        },
+        {
+          "question": "Is there a fence in the image?",
+          "ground_truth": "yes",
+          "model_prediction": "no",
+          "outcome": "FN",
+          "standard_evidence": 0.0099,
+          "disturbance_evidence": 0.0369,
+          "icd_calibrated_score": 24.0168
+        },
+        {
+          "question": "Is there a elephant in the image?",
+          "ground_truth": "no",
+          "model_prediction": "no",
+          "outcome": "TN",
+          "standard_evidence": 0.0037,
+          "disturbance_evidence": 0.0082,
+          "icd_calibrated_score": 22.7203
+        },
+        {
+          "question": "Is there a giraffe in the image?",
+          "ground_truth": "no",
+          "model_prediction": "no",
+          "outcome": "TN",
+          "standard_evidence": 0.0065,
+          "disturbance_evidence": 0.009,
+          "icd_calibrated_score": 23.9973
+        },
+        {
+          "question": "Is there a airplane in the image?",
+          "ground_truth": "no",
+          "model_prediction": "no",
+          "outcome": "TN",
+          "standard_evidence": 0.0061,
+          "disturbance_evidence": 0.0258,
+          "icd_calibrated_score": 22.5175
+        },
+        {
+          "question": "Is there a helicopter in the image?",
+          "ground_truth": "no",
+          "model_prediction": "no",
+          "outcome": "TN",
+          "standard_evidence": 0.0065,
+          "disturbance_evidence": 0.0352,
+          "icd_calibrated_score": 22.4811
+        },
+        {
+          "question": "Is there a submarine in the image?",
+          "ground_truth": "no",
+          "model_prediction": "no",
+          "outcome": "TN",
+          "standard_evidence": 0.0014,
+          "disturbance_evidence": 0.0231,
+          "icd_calibrated_score": 19.5063
+        },
+        {
+          "question": "Is there a snowboard in the image?",
+          "ground_truth": "no",
+          "model_prediction": "no",
+          "outcome": "TN",
+          "standard_evidence": 0.002,
+          "disturbance_evidence": 0.0127,
+          "icd_calibrated_score": 20.6987
+        }
+      ]
+    },
+    "adversarial": {
+      "split": "adversarial",
+      "total_samples": 8,
+      "TP": 2,
+      "FP": 0,
+      "TN": 6,
+      "FN": 0,
+      "accuracy": 100.0,
+      "precision": 100.0,
+      "recall": 100.0,
+      "f1_score": 100.0,
+      "yes_ratio": 25.0,
+      "per_question": [
+        {
+          "question": "Is there a tree in the image?",
+          "ground_truth": "yes",
+          "model_prediction": "yes",
+          "outcome": "TP",
+          "standard_evidence": 0.5179,
+          "disturbance_evidence": 0.2261,
+          "icd_calibrated_score": 31.4049
+        },
+        {
+          "question": "Is there a grass in the image?",
+          "ground_truth": "yes",
+          "model_prediction": "yes",
+          "outcome": "TP",
+          "standard_evidence": 0.2724,
+          "disturbance_evidence": 0.153,
+          "icd_calibrated_score": 28.7969
+        },
+        {
+          "question": "Is there a potted plant in the image?",
+          "ground_truth": "no",
+          "model_prediction": "no",
+          "outcome": "TN",
+          "standard_evidence": 0.0088,
+          "disturbance_evidence": 0.028,
+          "icd_calibrated_score": 23.8278
+        },
+        {
+          "question": "Is there a elephant in the image?",
+          "ground_truth": "no",
+          "model_prediction": "no",
+          "outcome": "TN",
+          "standard_evidence": 0.0037,
+          "disturbance_evidence": 0.0082,
+          "icd_calibrated_score": 22.7203
+        },
+        {
+          "question": "Is there a giraffe in the image?",
+          "ground_truth": "no",
+          "model_prediction": "no",
+          "outcome": "TN",
+          "standard_evidence": 0.0065,
+          "disturbance_evidence": 0.009,
+          "icd_calibrated_score": 23.9973
+        },
+        {
+          "question": "Is there a airplane in the image?",
+          "ground_truth": "no",
+          "model_prediction": "no",
+          "outcome": "TN",
+          "standard_evidence": 0.0061,
+          "disturbance_evidence": 0.0258,
+          "icd_calibrated_score": 22.5175
+        },
+        {
+          "question": "Is there a helicopter in the image?",
+          "ground_truth": "no",
+          "model_prediction": "no",
+          "outcome": "TN",
+          "standard_evidence": 0.0065,
+          "disturbance_evidence": 0.0352,
+          "icd_calibrated_score": 22.4811
+        },
+        {
+          "question": "Is there a submarine in the image?",
+          "ground_truth": "no",
+          "model_prediction": "no",
+          "outcome": "TN",
+          "standard_evidence": 0.0014,
+          "disturbance_evidence": 0.0231,
+          "icd_calibrated_score": 19.5063
+        }
+      ]
+    }
+  }
+}
