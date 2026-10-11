@@ -1,0 +1,30 @@
+[
+  {
+    "question_id": 1,
+    "question": "Is there a dog in the image?",
+    "label": "yes",
+    "split": "random",
+    "image_path": "synthetic"
+  },
+  {
+    "question_id": 2,
+    "question": "Is there a bicycle in the image?",
+    "label": "no",
+    "split": "random",
+    "image_path": "synthetic"
+  },
+  {
+    "question_id": 3,
+    "question": "Is there a couch in the image?",
+    "label": "no",
+    "split": "random",
+    "image_path": "synthetic"
+  },
+  {
+    "question_id": 4,
+    "question": "Is there a person in the image?",
+    "label": "yes",
+    "split": "random",
+    "image_path": "synthetic"
+  }
+]
