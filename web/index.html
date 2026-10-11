@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ICD Hallucination & POPE Verifier | Vision-Language Benchmark</title>
+  <meta name="description" content="Evidence-Grounded Hallucination Verifier and POPE Evaluation using Instruction Contrastive Decoding (ICD, Wang et al. ACL 2024)">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #090d16;
+      --bg-card: rgba(18, 24, 38, 0.75);
+      --bg-card-hover: rgba(24, 32, 50, 0.85);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(99, 102, 241, 0.3);
+      --primary: #6366f1;
+      --primary-glow: rgba(99, 102, 241, 0.25);
+      --cyan: #06b6d4;
+      --emerald: #10b981;
+      --emerald-glow: rgba(16, 185, 129, 0.2);
+      --crimson: #ef4444;
+      --crimson-glow: rgba(239, 68, 68, 0.2);
+      --amber: #f59e0b;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 15% 10%, rgba(99, 102, 241, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 20%, rgba(6, 182, 212, 0.10) 0%, transparent 40%),
+        radial-gradient(circle at 50% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      font-family: 'Outfit', sans-serif;
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* Header Nav */
+    header {
+      border-bottom: 1px solid var(--border-subtle);
+      backdrop-filter: blur(12px);
+      background: rgba(9, 13, 22, 0.8);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, #6366f1, #06b6d4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 0 20px var(--primary-glow);
+    }
+
+    .brand-title {
+      font-weight: 700;
+      font-size: 1.25rem;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #ffffff 40%, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-subtitle {
+      font-size: 0.75rem;
+      color: var(--cyan);
+      font-family: 'JetBrains Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .paper-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      border-radius: 9999px;
+      padding: 6px 14px;
+      font-size: 0.78rem;
+      color: #c7d2fe;
+    }
+
+    .paper-badge span {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 8px var(--emerald);
+    }
+
+    /* Main Container */
+    main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 32px 24px 60px;
+    }
+
+    .hero-banner {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .hero-banner h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 8px;
+      background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-banner p {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    /* Grid Layout */
+    .app-grid {
+      display: grid;
+      grid-template-columns: 460px 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+
+    @media (max-width: 1080px) {
+      .app-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+      transition: var(--transition);
+    }
+
+    .card:hover {
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .card-title {
+      font-size: 1.08rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Upload Dropzone */
+    .dropzone {
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      background: rgba(255, 255, 255, 0.02);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--primary);
+      background: rgba(99, 102, 241, 0.05);
+    }
+
+    .dropzone-icon {
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+
+    .dropzone-text {
+      font-size: 0.95rem;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .dropzone-subtext {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+
+    #file-input {
+      display: none;
+    }
+
+    /* Image Preview */
+    .preview-box {
+      margin-top: 16px;
+      display: none;
+      position: relative;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border-subtle);
+      max-height: 240px;
+      background: #000;
+    }
+
+    .preview-img {
+      width: 100%;
+      height: 240px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .preview-remove-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      transition: var(--transition);
+    }
+
+    .preview-remove-btn:hover {
+      background: var(--crimson);
+    }
+
+    /* Samples Selector */
+    .samples-section {
+      margin-top: 18px;
+    }
+
+    .section-label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .samples-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .sample-btn {
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.03);
+      padding: 6px;
+      cursor: pointer;
+      text-align: center;
+      transition: var(--transition);
+    }
+
+    .sample-btn:hover, .sample-btn.active {
+      border-color: var(--cyan);
+      background: rgba(6, 182, 212, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .sample-btn img {
+      width: 100%;
+      height: 54px;
+      object-fit: cover;
+      border-radius: 4px;
+      margin-bottom: 4px;
+    }
+
+    .sample-btn span {
+      display: block;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Input Field */
+    .form-group {
+      margin-top: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: var(--text-main);
+    }
+
+    .caption-input {
+      width: 100%;
+      background: rgba(10, 15, 28, 0.8);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.95rem;
+      resize: vertical;
+      min-height: 84px;
+      transition: var(--transition);
+    }
+
+    .caption-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    /* Submit Button */
+    .btn-verify {
+      width: 100%;
+      margin-top: 22px;
+      background: linear-gradient(135deg, #6366f1, #06b6d4);
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 14px 20px;
+      color: white;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: var(--transition);
+      box-shadow: 0 4px 20px var(--primary-glow);
+    }
+
+    .btn-verify:hover:not(:disabled) {
+      filter: brightness(1.15);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-verify:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.2);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Results Column */
+    .results-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 480px;
+      border: 2px dashed rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-lg);
+      color: var(--text-dim);
+      text-align: center;
+      padding: 40px;
+    }
+
+    .results-empty-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+      opacity: 0.5;
+    }
+
+    .results-container {
+      display: none;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* Hero Verdict Banner */
+    .verdict-banner {
+      border-radius: var(--radius-md);
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      backdrop-filter: blur(12px);
+      animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .verdict-banner.grounded {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05));
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      box-shadow: 0 0 25px var(--emerald-glow);
+    }
+
+    .verdict-banner.hallucinated {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(239, 68, 68, 0.05));
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      box-shadow: 0 0 25px var(--crimson-glow);
+    }
+
+    .verdict-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .verdict-tag {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 700;
+    }
+
+    .verdict-banner.grounded .verdict-tag { color: var(--emerald); }
+    .verdict-banner.hallucinated .verdict-tag { color: var(--crimson); }
+
+    .verdict-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .verdict-metric-box {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .metric-pill {
+      text-align: right;
+    }
+
+    .metric-pill-label {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    .metric-pill-val {
+      font-size: 1.4rem;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Annotated Caption */
+    .annotated-box {
+      background: rgba(10, 14, 25, 0.7);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+    }
+
+    .annotated-text {
+      font-size: 1.05rem;
+      line-height: 1.7;
+    }
+
+    .badge-grounded {
+      background: rgba(16, 185, 129, 0.18);
+      color: #6ee7b7;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.9em;
+      display: inline-block;
+    }
+
+    .badge-hallucinated {
+      background: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.45);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.9em;
+      display: inline-block;
+      text-decoration: line-through;
+    }
+
+    /* Composite Image Display */
+    .visual-comparison-box {
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background: #000;
+      position: relative;
+    }
+
+    .comparison-img {
+      width: 100%;
+      height: auto;
+      display: block;
+      cursor: zoom-in;
+    }
+
+    .img-actions-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: rgba(10, 14, 25, 0.9);
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .btn-action {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--text-main);
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition);
+      text-decoration: none;
+    }
+
+    .btn-action:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--cyan);
+    }
+
+    /* Claims Audit Table */
+    .audit-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    .audit-table th {
+      text-align: left;
+      padding: 10px 12px;
+      color: var(--text-dim);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .audit-table td {
+      padding: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      vertical-align: middle;
+    }
+
+    .audit-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .status-tag {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.04em;
+      display: inline-block;
+    }
+
+    .status-tag.pass {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-tag.fail {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    /* Progress Bar */
+    .prog-bar-container {
+      width: 90px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      overflow: hidden;
+      display: inline-block;
+      vertical-align: middle;
+      margin-left: 6px;
+    }
+
+    .prog-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+    }
+
+    .prog-bar-fill.std { background: #38bdf8; }
+    .prog-bar-fill.dist { background: #f43f5e; }
+
+    /* POPE Benchmark Cards Grid */
+    .pope-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    @media (max-width: 768px) {
+      .pope-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .pope-card {
+      background: rgba(10, 14, 25, 0.6);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px;
+    }
+
+    .pope-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .pope-split-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #cbd5e1;
+    }
+
+    .pope-samples-badge {
+      font-size: 0.7rem;
+      background: rgba(255, 255, 255, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--text-dim);
+    }
+
+    .pope-stat-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 0.82rem;
+    }
+
+    .pope-stat-label { color: var(--text-muted); }
+    .pope-stat-val { font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+
+    /* Modal for Image Zoom */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal.active { display: flex; }
+
+    .modal-content {
+      max-width: 95vw;
+      max-height: 92vh;
+      border-radius: var(--radius-md);
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      color: #fff;
+      font-size: 32px;
+      cursor: pointer;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon">🔬</div>
+      <div>
+        <div class="brand-title">ICD Hallucination Verifier</div>
+        <div class="brand-subtitle">Instruction Contrastive Decoding (ACL 2024)</div>
+      </div>
+    </div>
+    <div class="paper-badge">
+      <span></span>
+      ACL 2024 • EMNLP 2023 (POPE) • EMNLP 2018 (CHAIR)
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main>
+    <div class="hero-banner">
+      <h1>Multimodal Hallucination & POPE Verification</h1>
+      <p>Evaluate visual grounding on any image and description using Instruction Contrastive Decoding (ICD) to disentangle language priors from visual evidence.</p>
+    </div>
+
+    <div class="app-grid">
+      
+      <!-- Input Panel -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>📷</span> Input Image & Description
+          </div>
+          <span style="font-size:0.75rem; color:var(--text-dim);">Evidence Grounding</span>
+        </div>
+
+        <!-- Dropzone -->
+        <div class="dropzone" id="dropzone">
+          <div class="dropzone-icon">📁</div>
+          <div class="dropzone-text">Drag & drop image here</div>
+          <div class="dropzone-subtext">or click to browse from device (JPG, PNG)</div>
+          <input type="file" id="file-input" accept="image/*">
+        </div>
+
+        <!-- Preview Box -->
+        <div class="preview-box" id="preview-box">
+          <img class="preview-img" id="preview-img" alt="Uploaded Preview">
+          <button class="preview-remove-btn" id="btn-remove-img" title="Remove image">&times;</button>
+        </div>
+
+        <!-- Preset Samples -->
+        <div class="samples-section">
+          <div class="section-label">Or choose a sample image:</div>
+          <div class="samples-grid" id="samples-grid">
+            <!-- Populated dynamically via JavaScript -->
+          </div>
+        </div>
+
+        <!-- Caption Input -->
+        <div class="form-group">
+          <label class="form-label" for="caption-input">Description / Caption to Verify:</label>
+          <textarea class="caption-input" id="caption-input" placeholder="e.g. A cat walking on top of a wooden fence..."></textarea>
+        </div>
+
+        <!-- Submit Button -->
+        <button class="btn-verify" id="btn-verify">
+          <div class="spinner" id="spinner"></div>
+          <span id="btn-text">⚡ Verify Hallucination & POPE</span>
+        </button>
+      </div>
+
+      <!-- Results Panel -->
+      <div id="results-wrapper">
+        
+        <!-- Empty State -->
+        <div class="results-empty" id="results-empty">
+          <div class="results-empty-icon">📊</div>
+          <h3 style="margin-bottom: 6px;">No Image Analyzed Yet</h3>
+          <p style="font-size: 0.9rem; max-width: 380px;">Upload an image or pick a sample on the left, enter a description, and click "Verify Hallucination & POPE" to audit evidence.</p>
+        </div>
+
+        <!-- Active Results Container -->
+        <div class="results-container" id="results-container" style="display: none;">
+          
+          <!-- Verdict Banner -->
+          <div class="verdict-banner" id="verdict-banner">
+            <div class="verdict-info">
+              <span class="verdict-tag" id="verdict-tag">Overall Verdict</span>
+              <span class="verdict-title" id="verdict-title">GROUNDED</span>
+              <span style="font-size:0.8rem; color:var(--text-muted);" id="verdict-engine">Wang et al. (ACL 2024) ICD Framework</span>
+            </div>
+            <div class="verdict-metric-box">
+              <div class="metric-pill">
+                <div class="metric-pill-label">CHAIR_i Hallucination</div>
+                <div class="metric-pill-val" id="metric-chair">0.0%</div>
+              </div>
+              <div class="metric-pill">
+                <div class="metric-pill-label">Claims Checked</div>
+                <div class="metric-pill-val" id="metric-claims">0</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Annotated Caption Card -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📝 Entity-Annotated Caption</div>
+              <span style="font-size:0.75rem; color:var(--text-dim);">Semantic Parsing</span>
+            </div>
+            <div class="annotated-box">
+              <div class="annotated-text" id="annotated-text"></div>
+            </div>
+          </div>
+
+          <!-- 3-Panel Diagnostic Comparison Image -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">🖼️ Diagnostic 3-Panel Comparison Visual</div>
+              <span style="font-size:0.75rem; color:var(--cyan);">Original • Disturbance • Audit</span>
+            </div>
+            <div class="visual-comparison-box">
+              <img class="comparison-img" id="comparison-img" alt="3-Panel Diagnostic Comparison" title="Click to zoom">
+              <div class="img-actions-bar">
+                <span style="font-size:0.78rem; color:var(--text-muted);" id="img-path-caption">results/image_perturbed_comparison.png</span>
+                <div style="display:flex; gap:8px;">
+                  <button class="btn-action" id="btn-zoom-img">🔍 Fullscreen Zoom</button>
+                  <a class="btn-action" id="btn-download-img" download="diagnostic_comparison.png">⬇️ Download PNG</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Claim-by-Claim ICD Audit Table -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">🔬 Claim-by-Claim ICD Evidence Audit</div>
+              <span style="font-size:0.75rem; color:var(--text-dim);">Contrastive Probabilities</span>
+            </div>
+            <div style="overflow-x: auto;">
+              <table class="audit-table">
+                <thead>
+                  <tr>
+                    <th>Claimed Concept</th>
+                    <th>Status</th>
+                    <th>Std Visual Evidence</th>
+                    <th>Disturbance Prior</th>
+                    <th>Absence Score</th>
+                    <th>ICD Logit</th>
+                  </tr>
+                </thead>
+                <tbody id="audit-table-body">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- POPE Benchmark Grid -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">🎯 Image-Specific POPE Benchmark (Li et al., EMNLP 2023)</div>
+              <span style="font-size:0.75rem; color:var(--text-dim);">3-Split Probing</span>
+            </div>
+            <div class="pope-grid" id="pope-grid">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Modal for Zoom -->
+  <div class="modal" id="modal-zoom">
+    <span class="modal-close" id="modal-close">&times;</span>
+    <img class="modal-content" id="modal-img" alt="Full size comparison">
+  </div>
+
+  <script>
+    // State
+    let selectedFile = null;
+    let selectedSamplePath = null;
+
+    const SAMPLES = [
+      {
+        name: "Lone Tree",
+        file: "tree.jpg",
+        description: "A person and tree is there",
+        thumb: "/samples/tree.jpg"
+      },
+      {
+        name: "Cat on Fence",
+        file: "images (1).jpg",
+        description: "human is taking photo and cat is there",
+        thumb: "/samples/images%20(1).jpg"
+      },
+      {
+        name: "Hot Air Balloon",
+        file: "download.jpg",
+        description: "a balloon flying over the canyon",
+        thumb: "/samples/download.jpg"
+      },
+      {
+        name: "Mountain Sky",
+        file: "image.png",
+        description: "A bird is flying between mountains",
+        thumb: "/samples/image.png"
+      }
+    ];
+
+    // DOM Elements
+    const dropzone = document.getElementById("dropzone");
+    const fileInput = document.getElementById("file-input");
+    const previewBox = document.getElementById("preview-box");
+    const previewImg = document.getElementById("preview-img");
+    const btnRemoveImg = document.getElementById("btn-remove-img");
+    const captionInput = document.getElementById("caption-input");
+    const btnVerify = document.getElementById("btn-verify");
+    const spinner = document.getElementById("spinner");
+    const btnText = document.getElementById("btn-text");
+    const samplesGrid = document.getElementById("samples-grid");
+
+    const resultsEmpty = document.getElementById("results-empty");
+    const resultsContainer = document.getElementById("results-container");
+
+    const verdictBanner = document.getElementById("verdict-banner");
+    const verdictTitle = document.getElementById("verdict-title");
+    const verdictTag = document.getElementById("verdict-tag");
+    const metricChair = document.getElementById("metric-chair");
+    const metricClaims = document.getElementById("metric-claims");
+    const annotatedText = document.getElementById("annotated-text");
+    const comparisonImg = document.getElementById("comparison-img");
+    const imgPathCaption = document.getElementById("img-path-caption");
+    const btnDownloadImg = document.getElementById("btn-download-img");
+    const auditTableBody = document.getElementById("audit-table-body");
+    const popeGrid = document.getElementById("pope-grid");
+
+    const modalZoom = document.getElementById("modal-zoom");
+    const modalImg = document.getElementById("modal-img");
+    const modalClose = document.getElementById("modal-close");
+    const btnZoomImg = document.getElementById("btn-zoom-img");
+
+    // Init Samples
+    function initSamples() {
+      samplesGrid.innerHTML = "";
+      SAMPLES.forEach((sample, idx) => {
+        const btn = document.createElement("div");
+        btn.className = "sample-btn";
+        btn.innerHTML = `
+          <img src="${sample.thumb}" alt="${sample.name}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'50\\' height=\\'50\\'><rect width=\\'50\\' height=\\'50\\' fill=\\'%23222\\'/></svg>'">
+          <span>${sample.name}</span>
+        `;
+        btn.addEventListener("click", () => selectSample(sample, btn));
+        samplesGrid.appendChild(btn);
+      });
+    }
+
+    function selectSample(sample, btnEl) {
+      document.querySelectorAll(".sample-btn").forEach(b => b.classList.remove("active"));
+      btnEl.classList.add("active");
+      
+      selectedFile = null;
+      selectedSamplePath = sample.file;
+      
+      previewImg.src = sample.thumb;
+      previewBox.style.display = "block";
+      dropzone.style.display = "none";
+      captionInput.value = sample.description;
+    }
+
+    // Dropzone Events
+    dropzone.addEventListener("click", () => fileInput.click());
+    
+    dropzone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropzone.classList.add("dragover");
+    });
+
+    dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragover"));
+
+    dropzone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropzone.classList.remove("dragover");
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        handleFileSelect(e.dataTransfer.files[0]);
+      }
+    });
+
+    fileInput.addEventListener("change", (e) => {
+      if (e.target.files && e.target.files[0]) {
+        handleFileSelect(e.target.files[0]);
+      }
+    });
+
+    function handleFileSelect(file) {
+      selectedFile = file;
+      selectedSamplePath = null;
+      document.querySelectorAll(".sample-btn").forEach(b => b.classList.remove("active"));
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        previewImg.src = e.target.result;
+        previewBox.style.display = "block";
+        dropzone.style.display = "none";
+      };
+      reader.readAsDataURL(file);
+    }
+
+    btnRemoveImg.addEventListener("click", () => {
+      selectedFile = null;
+      selectedSamplePath = null;
+      previewBox.style.display = "none";
+      dropzone.style.display = "block";
+      fileInput.value = "";
+      document.querySelectorAll(".sample-btn").forEach(b => b.classList.remove("active"));
+    });
+
+    // Zoom Modal
+    function openZoom() {
+      if (comparisonImg.src) {
+        modalImg.src = comparisonImg.src;
+        modalZoom.classList.add("active");
+      }
+    }
+    comparisonImg.addEventListener("click", openZoom);
+    btnZoomImg.addEventListener("click", openZoom);
+    modalClose.addEventListener("click", () => modalZoom.classList.remove("active"));
+    modalZoom.addEventListener("click", (e) => {
+      if (e.target === modalZoom) modalZoom.classList.remove("active");
+    });
+
+    // Verification API Call
+    btnVerify.addEventListener("click", async () => {
+      const description = captionInput.value.trim();
+      if (!description) {
+        alert("Please enter a description or caption to verify.");
+        captionInput.focus();
+        return;
+      }
+
+      if (!selectedFile && !selectedSamplePath) {
+        alert("Please select or upload an image to verify.");
+        return;
+      }
+
+      // UI Loading state
+      btnVerify.disabled = true;
+      spinner.style.display = "block";
+      btnText.textContent = "Running ICD & POPE Evaluation...";
+
+      try {
+        const formData = new FormData();
+        formData.append("description", description);
+
+        if (selectedFile) {
+          formData.append("image_file", selectedFile);
+        } else if (selectedSamplePath) {
+          formData.append("sample_name", selectedSamplePath);
+        }
+
+        const resp = await fetch("/api/verify", {
+          method: "POST",
+          body: formData
+        });
+
+        if (!resp.ok) {
+          const errData = await resp.json().catch(() => ({}));
+          throw new Error(errData.detail || "Verification failed on server.");
+        }
+
+        const data = await resp.json();
+        renderResults(data);
+
+      } catch (err) {
+        alert("Error during verification: " + err.message);
+      } finally {
+        btnVerify.disabled = false;
+        spinner.style.display = "none";
+        btnText.textContent = "⚡ Verify Hallucination & POPE";
+      }
+    });
+
+    // Render Results
+    function renderResults(data) {
+      resultsEmpty.style.display = "none";
+      resultsContainer.style.display = "flex";
+
+      const v = data.verification;
+      const isHallucinated = v.is_hallucinated;
+
+      // Verdict Banner
+      verdictBanner.className = "verdict-banner " + (isHallucinated ? "hallucinated" : "grounded");
+      verdictTitle.textContent = isHallucinated ? "HALLUCINATED" : "FAITHFUL / GROUNDED";
+      verdictTag.textContent = isHallucinated ? "Hallucination Detected" : "Visually Grounded";
+      metricChair.textContent = v.hallucination_rate_chair_i + "%";
+      metricClaims.textContent = v.total_claims_checked;
+
+      // Annotated Caption
+      let rawText = v.description;
+      let annotatedHtml = rawText;
+
+      // Highlight verified objects in green badge, hallucinated in red badge
+      (v.hallucinated_objects || []).forEach(obj => {
+        const reg = new RegExp(`\\b${obj}\\b`, "gi");
+        annotatedHtml = annotatedHtml.replace(reg, `<span class="badge-hallucinated">${obj}</span>`);
+      });
+      (v.verified_objects || []).forEach(obj => {
+        const reg = new RegExp(`\\b${obj}\\b`, "gi");
+        annotatedHtml = annotatedHtml.replace(reg, `<span class="badge-grounded">${obj}</span>`);
+      });
+      annotatedText.innerHTML = annotatedHtml;
+
+      // Comparison Visual
+      if (data.comparison_image_url) {
+        const timestampUrl = data.comparison_image_url + "?t=" + new Date().getTime();
+        comparisonImg.src = timestampUrl;
+        btnDownloadImg.href = timestampUrl;
+        imgPathCaption.textContent = data.comparison_image_url;
+      }
+
+      // Claims Audit Table
+      auditTableBody.innerHTML = "";
+      (v.claims_breakdown || []).forEach(claim => {
+        const isPass = claim.status === "VERIFIED_PRESENT";
+        const std = claim.standard_evidence || 0;
+        const dist = claim.disturbance_evidence || 0;
+        const abs = claim.absence_evidence || 0;
+        const icd = claim.icd_calibrated_score || 0;
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td style="font-weight:600; font-family:'JetBrains Mono',monospace;">${claim.claimed_object}</td>
+          <td><span class="status-tag ${isPass ? 'pass' : 'fail'}">${isPass ? '[PASS]' : '[FAIL]'}</span></td>
+          <td>
+            ${(std * 100).toFixed(1)}%
+            <div class="prog-bar-container"><div class="prog-bar-fill std" style="width:${Math.min(100, std * 100)}%;"></div></div>
+          </td>
+          <td>
+            ${(dist * 100).toFixed(1)}%
+            <div class="prog-bar-container"><div class="prog-bar-fill dist" style="width:${Math.min(100, dist * 100)}%;"></div></div>
+          </td>
+          <td style="color:var(--text-muted);">${(abs * 100).toFixed(1)}%</td>
+          <td style="font-family:'JetBrains Mono',monospace; color:#a5b4fc;">${icd.toFixed(2)}</td>
+        `;
+        auditTableBody.appendChild(tr);
+      });
+
+      // POPE Benchmarks
+      popeGrid.innerHTML = "";
+      if (data.pope_results) {
+        for (const [split, metrics] of Object.entries(data.pope_results)) {
+          const card = document.createElement("div");
+          card.className = "pope-card";
+          card.innerHTML = `
+            <div class="pope-card-header">
+              <span class="pope-split-title">${split} Split</span>
+              <span class="pope-samples-badge">${metrics.total_samples} Qs</span>
+            </div>
+            <div class="pope-stat-row">
+              <span class="pope-stat-label">Accuracy:</span>
+              <span class="pope-stat-val" style="color:#38bdf8;">${metrics.accuracy.toFixed(1)}%</span>
+            </div>
+            <div class="pope-stat-row">
+              <span class="pope-stat-label">Precision:</span>
+              <span class="pope-stat-val">${metrics.precision.toFixed(1)}%</span>
+            </div>
+            <div class="pope-stat-row">
+              <span class="pope-stat-label">Recall:</span>
+              <span class="pope-stat-val">${metrics.recall.toFixed(1)}%</span>
+            </div>
+            <div class="pope-stat-row">
+              <span class="pope-stat-label">F1-Score:</span>
+              <span class="pope-stat-val" style="color:#a7f3d0;">${metrics.f1_score.toFixed(1)}%</span>
+            </div>
+            <div class="pope-stat-row">
+              <span class="pope-stat-label">Yes-Ratio:</span>
+              <span class="pope-stat-val" style="color:var(--text-dim);">${metrics.yes_ratio.toFixed(1)}%</span>
+            </div>
+          `;
+          popeGrid.appendChild(card);
+        }
+      }
+
+      // Smooth scroll into results view on mobile/small screens
+      if (window.innerWidth < 1080) {
+        resultsContainer.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    // Start
+    initSamples();
+    // Default pick first sample
+    if (SAMPLES.length > 0) {
+      const firstBtn = samplesGrid.children[0];
+      selectSample(SAMPLES[0], firstBtn);
+    }
+  </script>
+</body>
+</html>
