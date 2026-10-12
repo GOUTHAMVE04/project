@@ -188,7 +188,7 @@ def compile_comparison_reports(baseline: dict, trained: dict, results_dir: Path)
 
 ## Quantitative Results Table
 
-| Evaluation Metric | Baseline (Untrained) | Trained Projector | Delta ($\Delta$) | Relative Change |
+| Evaluation Metric | Baseline (Untrained) | Trained Projector | Delta ($\\Delta$) | Relative Change |
 | :--- | :---: | :---: | :---: | :---: |
 | **Align($V, W$) Mean IoU** | {b_align['align_mean_iou']:.4f} | **{t_align['align_mean_iou']:.4f}** | +{t_align['align_mean_iou'] - b_align['align_mean_iou']:.4f} | **+{((t_align['align_mean_iou'] - b_align['align_mean_iou']) / b_align['align_mean_iou']) * 100:.1f}%** |
 | **Align($V, W$) Acc @ IoU $\ge 0.50$** | {b_align['align_acc_iou_0.50'] * 100:.2f}% | **{t_align['align_acc_iou_0.50'] * 100:.2f}%** | +{(t_align['align_acc_iou_0.50'] - b_align['align_acc_iou_0.50']) * 100:.2f}% | **+{(t_align['align_acc_iou_0.50'] / max(b_align['align_acc_iou_0.50'], 1e-4)) * 100:.1f}%** |
