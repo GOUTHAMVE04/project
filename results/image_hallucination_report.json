@@ -26,7 +26,7 @@
         "clean_evidence": 0.0141,
         "absence_evidence": 0.2624,
         "disturbance_evidence": 0.0113,
-        "perturbed_evidence": 0.1302,
+        "perturbed_evidence": 0.2313,
         "icd_calibrated_score": 24.0333,
         "calibrated_score": 24.0333,
         "confidence": 0.0073
@@ -38,7 +38,7 @@
         "clean_evidence": 0.0117,
         "absence_evidence": 0.2647,
         "disturbance_evidence": 0.0112,
-        "perturbed_evidence": 0.125,
+        "perturbed_evidence": 0.0595,
         "icd_calibrated_score": 23.6696,
         "calibrated_score": 23.6696,
         "confidence": 0.0047
@@ -50,7 +50,7 @@
         "clean_evidence": 0.758,
         "absence_evidence": 0.055,
         "disturbance_evidence": 0.5767,
-        "perturbed_evidence": 0.4406,
+        "perturbed_evidence": 0.2656,
         "icd_calibrated_score": 29.1025,
         "calibrated_score": 29.1025,
         "confidence": 0.8842

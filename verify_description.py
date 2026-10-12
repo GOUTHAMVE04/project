@@ -63,24 +63,27 @@ class ImagePOPEEvaluator:
         n_positive: int = 6,
         n_negative: int = 6
     ) -> List[Dict[str, Any]]:
-        confirmed_present = self._probe_image_for_present_objects(image, POPE_POSITIVE_POOL[:12])
+        confirmed_present = self._probe_image_for_present_objects(image, POPE_POSITIVE_POOL)
         confirmed_absent  = [o for o in POPE_NEGATIVE_POOL if o not in confirmed_present]
+        pool_absent       = [o for o in POPE_POSITIVE_POOL if o not in confirmed_present]
+
+        pos_q = confirmed_present[:n_positive]
 
         if split == "random":
-            pos_q = confirmed_present[:n_positive] if confirmed_present else POPE_POSITIVE_POOL[:n_positive]
-            neg_q = confirmed_absent[:n_negative]
+            neg_pool = confirmed_absent + pool_absent
+            neg_q = [o for o in neg_pool if o not in confirmed_present][:max(n_negative, len(pos_q) if pos_q else 6)]
         elif split == "popular":
-            pos_q = POPE_POSITIVE_POOL[:n_positive]
-            neg_q = POPE_NEGATIVE_POOL[:n_negative]
+            # Frequent concepts in common scenes that are confirmed absent in this specific image
+            neg_pool = pool_absent + confirmed_absent
+            neg_q = [o for o in neg_pool if o not in confirmed_present][:max(n_negative, len(pos_q) if pos_q else 6)]
         elif split == "adversarial":
             ADVERSARIAL_PAIRS = {
                 "cat": "dog", "dog": "cat", "car": "bus", "bicycle": "motorcycle",
                 "person": "mannequin", "tree": "potted plant", "fence": "wall",
                 "bird": "kite", "chair": "bench", "couch": "chair"
             }
-            hard_negs = [ADVERSARIAL_PAIRS[o] for o in confirmed_present if o in ADVERSARIAL_PAIRS]
-            neg_q = list(dict.fromkeys(hard_negs + confirmed_absent))[:n_negative]
-            pos_q = confirmed_present[:n_positive] if confirmed_present else POPE_POSITIVE_POOL[:n_positive]
+            hard_negs = [ADVERSARIAL_PAIRS[o] for o in confirmed_present if o in ADVERSARIAL_PAIRS and ADVERSARIAL_PAIRS[o] not in confirmed_present]
+            neg_q = list(dict.fromkeys(hard_negs + pool_absent + confirmed_absent))[:max(n_negative, len(pos_q) if pos_q else 6)]
         else:
             pos_q = confirmed_present[:n_positive]
             neg_q = confirmed_absent[:n_negative]

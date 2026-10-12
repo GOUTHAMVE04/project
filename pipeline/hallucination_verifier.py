@@ -54,8 +54,13 @@ class ProposedGroundedVerifier:
                 from transformers import CLIPProcessor, CLIPModel
                 model_id = "openai/clip-vit-base-patch32"
                 print(f"[ICDVerifier] Loading Vision-Language Encoder ({model_id})...")
-                ProposedGroundedVerifier._clip_processor = CLIPProcessor.from_pretrained(model_id)
-                ProposedGroundedVerifier._clip_model = CLIPModel.from_pretrained(model_id).to(self.device)
+                # Try local cache first to ensure instant offline initialization without network warnings
+                try:
+                    ProposedGroundedVerifier._clip_processor = CLIPProcessor.from_pretrained(model_id, local_files_only=True)
+                    ProposedGroundedVerifier._clip_model = CLIPModel.from_pretrained(model_id, local_files_only=True).to(self.device)
+                except Exception:
+                    ProposedGroundedVerifier._clip_processor = CLIPProcessor.from_pretrained(model_id)
+                    ProposedGroundedVerifier._clip_model = CLIPModel.from_pretrained(model_id).to(self.device)
                 ProposedGroundedVerifier._clip_model.eval()
                 print("[ICDVerifier] Vision-Language Encoder loaded successfully.")
             except Exception as e:
@@ -128,15 +133,18 @@ class ProposedGroundedVerifier:
             # Absence evidence is the combined confidence that the concept is absent or scene background
             absence_evidence = max(neg_score_std, bg1_score_std, bg2_score_std)
             
-            # Grounding decision:
+            # Grounding decision (Instruction Contrastive Decoding + Visual Grounding Calibration):
             # For an object to be genuinely present in the image:
-            # - Positive evidence must surpass the explicit absence/negation evidence
-            # - Positive evidence must not be a low residual (pos_score_std >= 0.12)
-            # - ICD score: positive evidence must survive disturbance discounting
+            # 1. Positive evidence must strictly surpass the negation probe
+            # 2. Positive evidence must compete with or exceed the scene absence background (pos_score_std >= absence_evidence * 0.90)
+            # 3. Positive evidence must beat uniform probability across the 6 probes (~0.1667): pos_score_std >= 0.20
+            # 4. Under Disturbance instruction (ICD), genuine visual evidence must survive disturbance discounting
+            # 5. Under Gaussian visual noise, clean evidence must remain significantly stronger than noise perturbation
             is_present = (
                 pos_score_std > neg_score_std and
-                pos_score_std >= 0.12 and
-                (pos_score_std > pos_score_dist * 0.75 or pos_score_std > 0.35) and
+                pos_score_std >= absence_evidence * 0.90 and
+                pos_score_std >= 0.20 and
+                (pos_score_std > pos_score_dist * 0.80 or pos_score_std >= 0.40) and
                 pos_score_std > pos_score_pert * 0.65
             )
 
@@ -158,16 +166,16 @@ class ProposedGroundedVerifier:
         else:
             return {
                 "concept": concept,
-                "is_present": True,
-                "standard_evidence": 0.5,
-                "clean_evidence": 0.5,
-                "absence_evidence": 0.2,
-                "disturbance_evidence": 0.2,
-                "perturbed_evidence": 0.2,
-                "icd_calibrated_score": 0.5,
-                "calibrated_score": 0.5,
-                "icd_confidence": 0.5,
-                "grounded_confidence": 0.5
+                "is_present": False,
+                "standard_evidence": 0.10,
+                "clean_evidence": 0.10,
+                "absence_evidence": 0.85,
+                "disturbance_evidence": 0.10,
+                "perturbed_evidence": 0.10,
+                "icd_calibrated_score": -0.5,
+                "calibrated_score": -0.5,
+                "icd_confidence": 0.0,
+                "grounded_confidence": 0.0
             }
 
 
@@ -176,20 +184,60 @@ class DescriptionHallucinationVerifier:
     Unified Description Hallucination Verifier comparing Base Model vs Proposed ICD Model
     (Wang et al., ACL 2024).
     """
-    STOP_WORDS = {
-        "a", "an", "the", "this", "that", "these", "those", "is", "are", "was", "were", 
+    NON_OBJECT_WORDS = {
+        # Articles & Pronouns
+        "a", "an", "the", "this", "that", "these", "those", "it", "its", "they", "them", "their",
+        "i", "you", "he", "she", "we", "my", "your", "his", "her", "our", "me", "him", "us",
+        # Auxiliary & Copula verbs
+        "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "having",
+        "do", "does", "did", "doing", "can", "could", "will", "would", "shall", "should", "may", "might", "must",
+        # Common prepositions & Conjunctions
         "in", "on", "at", "by", "for", "with", "about", "against", "between", "into",
         "through", "during", "before", "after", "above", "below", "to", "from", "up",
-        "down", "out", "off", "over", "under", "again", "further", "then",
+        "down", "out", "off", "over", "under", "again", "further", "then", "among",
+        "along", "across", "beside", "behind", "near", "next", "around", "onto", "toward", "towards",
+        "and", "or", "but", "also", "so", "than", "too", "very", "just", "now", "only", "well",
         "once", "here", "there", "when", "where", "why", "how", "all", "any", "both",
         "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not",
-        "only", "own", "same", "so", "than", "too", "very", "can", "will", "just",
-        "should", "now", "photo", "image", "picture", "scene", "background", "foreground",
+        # Common Action Verbs & Participles (Not Physical Entities)
+        "taking", "takes", "took", "taken",
+        "flying", "flies", "flew", "flown",
+        "swimming", "swims", "swam", "swum",
+        "climbing", "climbs", "climbed",
+        "driving", "drives", "drove", "driven",
+        "riding", "rides", "rode", "ridden",
+        "sitting", "sits", "sat",
+        "standing", "stands", "stood",
+        "floating", "floats", "floated",
+        "hanging", "hangs", "hung",
+        "smiling", "smiles", "smiled",
+        "walking", "walks", "walked",
+        "running", "runs", "ran",
+        "eating", "eats", "ate", "eaten",
+        "sleeping", "sleeps", "slept",
+        "drinking", "drinks", "drank", "drunk",
+        "talking", "talks", "talked",
+        "holding", "holds", "held",
+        "carrying", "carries", "carried",
+        "playing", "plays", "played",
+        "watching", "watches", "watched",
+        "looking", "looks", "looked",
+        "reading", "reads",
+        "writing", "writes", "wrote", "written",
+        "cooking", "cooks", "cooked",
+        "pointing", "points", "pointed",
+        "touching", "touches", "touched",
+        "moving", "moves", "moved",
+        "jumping", "jumps", "jumped",
+        "showing", "shows", "showed", "shown",
+        "perched", "parked", "placed", "positioned", "located", "centered",
+        "surrounded", "covered", "filled", "seen", "seeing", "sees", "saw",
+        "visible", "appearing", "appears", "appeared", "found", "finds",
+        "lying", "resting", "waiting", "facing", "posing", "passing",
+        # Meta & Non-physical descriptors
+        "photo", "image", "picture", "scene", "background", "foreground",
         "view", "side", "front", "top", "bottom", "middle", "center", "color", "colors",
-        "and", "or", "but", "also", "sitting", "standing", "lying", "eating", "running",
-        "walking", "looking", "holding", "wearing", "showing", "placed", "surrounded",
-        "playing", "resting", "sleeping", "moving", "jumping",
-        "next", "near", "beside", "around", "behind", "across",
+        "close", "shot", "day", "night", "moment", "area", "distance",
         "air", "sky", "wind", "space", "weather", "atmosphere", "water", "sun", "sunlight"
     }
 
@@ -197,33 +245,34 @@ class DescriptionHallucinationVerifier:
         self.proposed_model = ProposedGroundedVerifier()
 
     def extract_candidate_objects(self, description: str) -> List[str]:
-        """Extracts noun claims and physical concepts from description."""
+        """Extracts noun claims and physical concepts from description, filtering out verbs and non-entities."""
         text = re.sub(r"[^\w\s]", " ", description.lower())
         words = text.split()
         
         candidates = []
-        skip_next = False
-        
-        for i, word in enumerate(words):
-            if skip_next:
-                skip_next = False
-                continue
-                
-            if word in self.STOP_WORDS or len(word) <= 2:
+        i = 0
+        while i < len(words):
+            word = words[i]
+            if word in self.NON_OBJECT_WORDS or len(word) <= 2:
+                i += 1
                 continue
             
-            # Form compound phrases (e.g., 'black cat', 'wooden fence')
-            if i + 1 < len(words) and words[i + 1] not in self.STOP_WORDS and len(words[i + 1]) > 2:
-                compound = f"{word} {words[i + 1]}"
-                candidates.append(compound)
-                candidates.append(words[i + 1])
-                skip_next = True
-            else:
-                candidates.append(word)
+            # Form compound phrases if adjacent word is also a valid content word
+            if i + 1 < len(words):
+                next_word = words[i + 1]
+                if next_word not in self.NON_OBJECT_WORDS and len(next_word) > 2:
+                    compound = f"{word} {next_word}"
+                    candidates.append(compound)
+                    candidates.append(next_word)
+                    i += 2
+                    continue
+            
+            candidates.append(word)
+            i += 1
 
         unique_candidates = []
         for c in candidates:
-            if c not in unique_candidates:
+            if c not in unique_candidates and c not in self.NON_OBJECT_WORDS:
                 unique_candidates.append(c)
 
         return unique_candidates
