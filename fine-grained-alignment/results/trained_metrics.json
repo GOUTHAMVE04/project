@@ -1,0 +1,81 @@
+{
+  "model_status": "trained_patch_aligned",
+  "align_vw": {
+    "align_mean_iou": 0.2051,
+    "align_acc_iou_0.25": 0.3226,
+    "align_acc_iou_0.50": 0.1129,
+    "mean_on_target_cosine_sim": 0.6307,
+    "mean_background_cosine_sim": 0.4232,
+    "num_instances_evaluated": 310
+  },
+  "von_neumann_entropy": {
+    "entropy_before_projector": 2.0592,
+    "entropy_after_projector": 1.5675,
+    "entropy_compression_ratio": 0.7612,
+    "theoretical_max_entropy": 3.8918,
+    "num_images_evaluated": 80
+  },
+  "matching_pursuit": {
+    "mean_residual_ratio_step3": 0.3718,
+    "mean_top1_word_similarity": 0.8486,
+    "top1_matches_ground_truth_acc": 0.6097,
+    "num_instances_evaluated": 310,
+    "qualitative_samples": [
+      {
+        "ground_truth_label": "truck",
+        "top1_word": "truck",
+        "top1_sim": 0.9152,
+        "decomposed_atoms": [
+          "truck (+10.49)",
+          "person (+2.51)",
+          "traffic light (+1.34)"
+        ],
+        "final_residual_ratio": 0.3176
+      },
+      {
+        "ground_truth_label": "person",
+        "top1_word": "person",
+        "top1_sim": 0.7835,
+        "decomposed_atoms": [
+          "person (+8.71)",
+          "cow (+3.26)",
+          "tie (+2.45)"
+        ],
+        "final_residual_ratio": 0.5016
+      },
+      {
+        "ground_truth_label": "person",
+        "top1_word": "person",
+        "top1_sim": 0.9895,
+        "decomposed_atoms": [
+          "person (+21.73)",
+          "teddy bear (-1.40)",
+          "handbag (-0.73)"
+        ],
+        "final_residual_ratio": 0.1253
+      },
+      {
+        "ground_truth_label": "tennis racket",
+        "top1_word": "tennis racket",
+        "top1_sim": 0.9427,
+        "decomposed_atoms": [
+          "tennis racket (+22.47)",
+          "frisbee (+2.80)",
+          "remote (-1.73)"
+        ],
+        "final_residual_ratio": 0.3036
+      },
+      {
+        "ground_truth_label": "person",
+        "top1_word": "person",
+        "top1_sim": 0.9629,
+        "decomposed_atoms": [
+          "person (+12.54)",
+          "baseball glove (+2.31)",
+          "person (-0.82)"
+        ],
+        "final_residual_ratio": 0.1934
+      }
+    ]
+  }
+}

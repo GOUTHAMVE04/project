@@ -1,0 +1,146 @@
+{
+  "comparison_metrics": {
+    "align_mean_iou": {
+      "baseline": 0.1069,
+      "trained": 0.2051,
+      "delta": 0.0982
+    },
+    "align_acc_iou_0.50": {
+      "baseline": 0.0129,
+      "trained": 0.1129,
+      "delta": 0.1
+    },
+    "mean_on_target_cosine_sim": {
+      "baseline": -0.017,
+      "trained": 0.6307,
+      "delta": 0.6477
+    },
+    "mean_background_cosine_sim": {
+      "baseline": -0.0203,
+      "trained": 0.4232,
+      "delta": 0.4435
+    },
+    "entropy_after_projector": {
+      "baseline": 2.0169,
+      "trained": 1.5675,
+      "delta": -0.4494
+    },
+    "entropy_compression_ratio": {
+      "baseline": 0.9794,
+      "trained": 0.7612,
+      "delta": -0.2182
+    },
+    "mp_top1_matches_gt_acc": {
+      "baseline": 0.0,
+      "trained": 0.6097,
+      "delta": 0.6097
+    },
+    "mp_mean_top1_word_sim": {
+      "baseline": -0.0716,
+      "trained": 0.8486,
+      "delta": 0.9202
+    },
+    "mp_residual_ratio_step3": {
+      "baseline": 0.9889,
+      "trained": 0.3718,
+      "delta": -0.6171
+    }
+  },
+  "qualitative_comparison": [
+    {
+      "sample_index": 1,
+      "ground_truth_label": "truck",
+      "baseline_top1": "wine glass",
+      "baseline_sim": -0.0655,
+      "baseline_atoms": [
+        "wine glass (-0.77)",
+        "refrigerator (+0.87)",
+        "vase (-0.86)"
+      ],
+      "trained_top1": "truck",
+      "trained_sim": 0.9152,
+      "trained_atoms": [
+        "truck (+10.49)",
+        "person (+2.51)",
+        "traffic light (+1.34)"
+      ],
+      "coherent_match": true
+    },
+    {
+      "sample_index": 2,
+      "ground_truth_label": "person",
+      "baseline_top1": "horse",
+      "baseline_sim": -0.0879,
+      "baseline_atoms": [
+        "horse (-1.42)",
+        "umbrella (+1.63)",
+        "boat (-1.22)"
+      ],
+      "trained_top1": "person",
+      "trained_sim": 0.7835,
+      "trained_atoms": [
+        "person (+8.71)",
+        "cow (+3.26)",
+        "tie (+2.45)"
+      ],
+      "coherent_match": true
+    },
+    {
+      "sample_index": 3,
+      "ground_truth_label": "person",
+      "baseline_top1": "grass",
+      "baseline_sim": -0.0733,
+      "baseline_atoms": [
+        "grass (-0.89)",
+        "elephant (+0.95)",
+        "sky (-0.94)"
+      ],
+      "trained_top1": "person",
+      "trained_sim": 0.9895,
+      "trained_atoms": [
+        "person (+21.73)",
+        "teddy bear (-1.40)",
+        "handbag (-0.73)"
+      ],
+      "coherent_match": true
+    },
+    {
+      "sample_index": 4,
+      "ground_truth_label": "tennis racket",
+      "baseline_top1": "white",
+      "baseline_sim": -0.1006,
+      "baseline_atoms": [
+        "white (-1.50)",
+        "mouse (+1.08)",
+        "book (-1.34)"
+      ],
+      "trained_top1": "tennis racket",
+      "trained_sim": 0.9427,
+      "trained_atoms": [
+        "tennis racket (+22.47)",
+        "frisbee (+2.80)",
+        "remote (-1.73)"
+      ],
+      "coherent_match": true
+    },
+    {
+      "sample_index": 5,
+      "ground_truth_label": "person",
+      "baseline_top1": "white",
+      "baseline_sim": -0.0806,
+      "baseline_atoms": [
+        "white (-0.90)",
+        "elephant (+1.14)",
+        "train (-0.96)"
+      ],
+      "trained_top1": "person",
+      "trained_sim": 0.9629,
+      "trained_atoms": [
+        "person (+12.54)",
+        "baseball glove (+2.31)",
+        "person (-0.82)"
+      ],
+      "coherent_match": true
+    }
+  ]
+}

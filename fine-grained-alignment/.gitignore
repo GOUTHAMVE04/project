@@ -1,0 +1,26 @@
+# Environments
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Data & Models
+checkpoints/*.pt
+checkpoints/*.pth
+data/coco/
+data/annotations/
+data/*.zip
+*.tar.gz
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/

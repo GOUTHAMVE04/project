@@ -1,0 +1,39 @@
+# Configuration for Fine-Grained Patch Alignment Prototype
+
+data:
+  coco_img_dir: "data/coco/val2017"
+  coco_ann_file: "data/coco/annotations/instances_val2017.json"
+  manifest_path: "data/coco_subset_manifest.json"
+  num_images: 400
+  min_instances: 2
+  max_instances: 8
+  train_split: 0.8
+  image_size: 224
+  num_workers: 2
+
+model:
+  vision_encoder: "ViT-B-32"
+  vision_pretrained: "openai"
+  vision_dim: 768
+  patch_size: 32
+  grid_size: 7  # 224 / 32 = 7x7 = 49 patches
+  word_embedding_model: "gpt2"
+  word_dim: 768
+  projector_hidden_dim: 768
+
+training:
+  device: "mps"  # Fallback to cpu if mps not available
+  batch_size: 16
+  lr: 0.0005
+  weight_decay: 0.01
+  epochs: 25
+  beta_start: 0.0
+  beta_end: 5.0
+  checkpoint_dir: "checkpoints"
+  save_every: 5
+
+eval:
+  results_dir: "results"
+  sanity_dir: "sanity_checks"
+  iou_threshold: 0.5
+  vocabulary_size: 300

@@ -1,0 +1,25 @@
+# Environments
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Data and large weights
+*.pt
+*.pth
+*.bin
+*.safetensors
+data/coco/
+data/*.zip
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
