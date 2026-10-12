@@ -1,11 +1,11 @@
 {
   "framework": "Instruction Contrastive Decoding (ICD - Wang et al., ACL 2024)",
   "image_path": "C:\\Users\\HP\\OneDrive\\Desktop\\project\\images (1).jpg",
-  "description": "A cat is standing near a man",
+  "description": "The cat is dancing",
   "verification": {
     "model_used": "Proposed Model (Instruction Contrastive Decoding - Wang et al., ACL 2024)",
-    "description": "A cat is standing near a man",
-    "annotated_description": "A cat is standing near a [HALLUCINATED: man]",
+    "description": "The cat is dancing",
+    "annotated_description": "The cat is [HALLUCINATED: dancing]",
     "is_hallucinated": true,
     "verdict": "HALLUCINATED",
     "hallucination_rate_chair_i": 50.0,
@@ -14,7 +14,7 @@
       "cat"
     ],
     "hallucinated_objects": [
-      "man"
+      "dancing"
     ],
     "methodology": "Instruction Contrastive Decoding (Wang et al., ACL 2024) + POPE (EMNLP 2023) + CHAIR",
     "claims_breakdown": [
@@ -25,21 +25,21 @@
         "clean_evidence": 0.8042,
         "absence_evidence": 0.1683,
         "disturbance_evidence": 0.3515,
-        "perturbed_evidence": 0.217,
+        "perturbed_evidence": 0.8872,
         "icd_calibrated_score": 28.4257,
         "calibrated_score": 28.4257,
         "confidence": 1.0
       },
       {
-        "claimed_object": "man",
+        "claimed_object": "dancing",
         "status": "HALLUCINATED_ABSENT",
-        "standard_evidence": 0.0406,
-        "clean_evidence": 0.0406,
-        "absence_evidence": 0.6336,
-        "disturbance_evidence": 0.1733,
-        "perturbed_evidence": 0.0099,
-        "icd_calibrated_score": 18.09,
-        "calibrated_score": 18.09,
+        "standard_evidence": 0.0112,
+        "clean_evidence": 0.0112,
+        "absence_evidence": 0.0166,
+        "disturbance_evidence": 0.0246,
+        "perturbed_evidence": 0.0859,
+        "icd_calibrated_score": 19.4994,
+        "calibrated_score": 19.4994,
         "confidence": 0.0
       }
     ]
@@ -48,15 +48,15 @@
     "random": {
       "split": "random",
       "total_samples": 9,
-      "TP": 3,
+      "TP": 2,
       "FP": 0,
       "TN": 6,
-      "FN": 0,
-      "accuracy": 100.0,
+      "FN": 1,
+      "accuracy": 88.89,
       "precision": 100.0,
-      "recall": 100.0,
-      "f1_score": 100.0,
-      "yes_ratio": 33.33,
+      "recall": 66.67,
+      "f1_score": 80.0,
+      "yes_ratio": 22.22,
       "per_question": [
         {
           "question": "Is there a cat in the image?",
@@ -79,8 +79,8 @@
         {
           "question": "Is there a grass in the image?",
           "ground_truth": "yes",
-          "model_prediction": "yes",
-          "outcome": "TP",
+          "model_prediction": "no",
+          "outcome": "FN",
           "standard_evidence": 0.4416,
           "disturbance_evidence": 0.148,
           "icd_calibrated_score": 22.4549
@@ -143,8 +143,8 @@
     },
     "popular": {
       "split": "popular",
-      "total_samples": 8,
-      "TP": 2,
+      "total_samples": 9,
+      "TP": 3,
       "FP": 0,
       "TN": 6,
       "FN": 0,
@@ -152,7 +152,7 @@
       "precision": 100.0,
       "recall": 100.0,
       "f1_score": 100.0,
-      "yes_ratio": 25.0,
+      "yes_ratio": 33.33,
       "per_question": [
         {
           "question": "Is there a cat in the image?",
@@ -171,6 +171,15 @@
           "standard_evidence": 0.8425,
           "disturbance_evidence": 0.4833,
           "icd_calibrated_score": 27.8336
+        },
+        {
+          "question": "Is there a grass in the image?",
+          "ground_truth": "yes",
+          "model_prediction": "yes",
+          "outcome": "TP",
+          "standard_evidence": 0.4416,
+          "disturbance_evidence": 0.148,
+          "icd_calibrated_score": 22.4549
         },
         {
           "question": "Is there a dog in the image?",

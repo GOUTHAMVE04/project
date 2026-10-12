@@ -87,13 +87,19 @@ class ProposedGroundedVerifier:
             model = ProposedGroundedVerifier._clip_model
 
             # Probes: Positive presence vs Explicit absence vs Scene background
-            probe_pos = f"a photo containing a {concept}"
-            probe_neg = f"a photo with no {concept} at all"
-            probe_bg1 = f"a photo of an outdoor landscape or scenic view without any {concept}"
-            probe_bg2 = f"a photo of an indoor or natural scene with no {concept}"
-            
-            # Select 2 distinct semantic anchors not matching concept
-            alt_anchors = [f"a photo of a {a}" for a in self.REFERENCE_ANCHORS if a.lower() not in concept.lower()][:2]
+            is_action = concept.endswith("ing")
+            if is_action:
+                probe_pos = f"a photo showing {concept}"
+                probe_neg = f"a photo with no {concept} happening at all"
+                probe_bg1 = f"a photo of a still or static scene with no {concept}"
+                probe_bg2 = f"a photo of a quiet scene without any {concept}"
+                alt_anchors = ["a photo showing standing still", "a photo showing resting calmly"]
+            else:
+                probe_pos = f"a photo containing a {concept}"
+                probe_neg = f"a photo with no {concept} at all"
+                probe_bg1 = f"a photo of an outdoor landscape or scenic view without any {concept}"
+                probe_bg2 = f"a photo of an indoor or natural scene with no {concept}"
+                alt_anchors = [f"a photo of a {a}" for a in self.REFERENCE_ANCHORS if a.lower() not in concept.lower()][:2]
             
             std_probes = [probe_pos, probe_neg, probe_bg1, probe_bg2] + alt_anchors
 
@@ -182,9 +188,9 @@ class ProposedGroundedVerifier:
 class DescriptionHallucinationVerifier:
     """
     Unified Description Hallucination Verifier comparing Base Model vs Proposed ICD Model
-    (Wang et al., ACL 2024).
+    (Wang et al., ACL 2024), auditing both physical entities and action/verb claims.
     """
-    NON_OBJECT_WORDS = {
+    STOP_WORDS = {
         # Articles & Pronouns
         "a", "an", "the", "this", "that", "these", "those", "it", "its", "they", "them", "their",
         "i", "you", "he", "she", "we", "my", "your", "his", "her", "our", "me", "him", "us",
@@ -199,53 +205,56 @@ class DescriptionHallucinationVerifier:
         "and", "or", "but", "also", "so", "than", "too", "very", "just", "now", "only", "well",
         "once", "here", "there", "when", "where", "why", "how", "all", "any", "both",
         "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not",
-        # Common Action Verbs & Participles (Not Physical Entities)
-        "taking", "takes", "took", "taken",
-        "flying", "flies", "flew", "flown",
-        "swimming", "swims", "swam", "swum",
-        "climbing", "climbs", "climbed",
-        "driving", "drives", "drove", "driven",
-        "riding", "rides", "rode", "ridden",
-        "sitting", "sits", "sat",
-        "standing", "stands", "stood",
-        "floating", "floats", "floated",
-        "hanging", "hangs", "hung",
-        "smiling", "smiles", "smiled",
-        "walking", "walks", "walked",
-        "running", "runs", "ran",
-        "eating", "eats", "ate", "eaten",
-        "sleeping", "sleeps", "slept",
-        "drinking", "drinks", "drank", "drunk",
-        "talking", "talks", "talked",
-        "holding", "holds", "held",
-        "carrying", "carries", "carried",
-        "playing", "plays", "played",
-        "watching", "watches", "watched",
-        "looking", "looks", "looked",
-        "reading", "reads",
-        "writing", "writes", "wrote", "written",
-        "cooking", "cooks", "cooked",
-        "pointing", "points", "pointed",
-        "touching", "touches", "touched",
-        "moving", "moves", "moved",
-        "jumping", "jumps", "jumped",
-        "showing", "shows", "showed", "shown",
-        "perched", "parked", "placed", "positioned", "located", "centered",
-        "surrounded", "covered", "filled", "seen", "seeing", "sees", "saw",
-        "visible", "appearing", "appears", "appeared", "found", "finds",
-        "lying", "resting", "waiting", "facing", "posing", "passing",
-        # Meta & Non-physical descriptors
+        # Meta & Non-physical framing descriptors
         "photo", "image", "picture", "scene", "background", "foreground",
-        "view", "side", "front", "top", "bottom", "middle", "center", "color", "colors",
-        "close", "shot", "day", "night", "moment", "area", "distance",
-        "air", "sky", "wind", "space", "weather", "atmosphere", "water", "sun", "sunlight"
+        "view", "side", "front", "top", "bottom", "middle", "center",
+        "close", "shot", "moment", "area", "distance", "showing", "visible", "seen"
     }
+
+    # Action verbs normalized to active participle for optimal visual grounding
+    ACTION_MAP = {
+        "swimming": "swimming", "swims": "swimming", "swam": "swimming", "swum": "swimming",
+        "flying": "flying", "flies": "flying", "flew": "flying", "flown": "flying",
+        "climbing": "climbing", "climbs": "climbing", "climbed": "climbing",
+        "driving": "driving", "drives": "driving", "drove": "driving", "driven": "driving",
+        "riding": "riding", "rides": "riding", "rode": "riding", "ridden": "riding",
+        "sitting": "sitting", "sits": "sitting", "sat": "sitting",
+        "standing": "standing", "stands": "standing", "stood": "standing",
+        "floating": "floating", "floats": "floating", "floated": "floating",
+        "hanging": "hanging", "hangs": "hanging", "hung": "hanging",
+        "smiling": "smiling", "smiles": "smiling", "smiled": "smiling",
+        "walking": "walking", "walks": "walking", "walked": "walking",
+        "running": "running", "runs": "running", "ran": "running",
+        "eating": "eating", "eats": "eating", "ate": "eating", "eaten": "eating",
+        "sleeping": "sleeping", "sleeps": "sleeping", "slept": "sleeping",
+        "drinking": "drinking", "drinks": "drinking", "drank": "drinking", "drunk": "drinking",
+        "talking": "talking", "talks": "talking", "talked": "talking",
+        "holding": "holding", "holds": "holding", "held": "holding",
+        "carrying": "carrying", "carries": "carrying", "carried": "carrying",
+        "playing": "playing", "plays": "playing", "played": "playing",
+        "watching": "watching", "watches": "watching", "watched": "watching",
+        "reading": "reading", "reads": "reading",
+        "writing": "writing", "writes": "writing", "wrote": "writing", "written": "writing",
+        "cooking": "cooking", "cooks": "cooking", "cooked": "cooking",
+        "jumping": "jumping", "jumps": "jumping", "jumped": "jumping",
+        "diving": "diving", "dives": "diving", "dived": "diving",
+        "surfing": "surfing", "surfs": "surfing", "surfed": "surfing",
+        "dancing": "dancing", "dances": "dancing", "danced": "dancing",
+        "hunting": "hunting", "hunts": "hunting", "hunted": "hunting",
+        "chasing": "chasing", "chases": "chasing", "chased": "chasing",
+    }
+
+    # Backward compatibility alias
+    NON_OBJECT_WORDS = STOP_WORDS
 
     def __init__(self):
         self.proposed_model = ProposedGroundedVerifier()
 
     def extract_candidate_objects(self, description: str) -> List[str]:
-        """Extracts noun claims and physical concepts from description, filtering out verbs and non-entities."""
+        """
+        Extracts verifiable claims (both physical entities and action/verb claims) from description.
+        Filters out grammatical stopwords, copula verbs, and non-informative meta words.
+        """
         text = re.sub(r"[^\w\s]", " ", description.lower())
         words = text.split()
         
@@ -253,26 +262,33 @@ class DescriptionHallucinationVerifier:
         i = 0
         while i < len(words):
             word = words[i]
-            if word in self.NON_OBJECT_WORDS or len(word) <= 2:
+            if word in self.STOP_WORDS or len(word) <= 2:
                 i += 1
                 continue
-            
-            # Form compound phrases if adjacent word is also a valid content word
-            if i + 1 < len(words):
+
+            # Identify if word is an action verb or participle
+            action_form = self.ACTION_MAP.get(word, word if word.endswith("ing") else None)
+
+            # Check for multi-word noun compound (e.g. 'wooden fence', 'coffee cup')
+            if not action_form and i + 1 < len(words):
                 next_word = words[i + 1]
-                if next_word not in self.NON_OBJECT_WORDS and len(next_word) > 2:
+                next_action = self.ACTION_MAP.get(next_word, next_word if next_word.endswith("ing") else None)
+                if next_word not in self.STOP_WORDS and not next_action and len(next_word) > 2:
                     compound = f"{word} {next_word}"
                     candidates.append(compound)
                     candidates.append(next_word)
                     i += 2
                     continue
-            
-            candidates.append(word)
+
+            if action_form:
+                candidates.append(action_form)
+            else:
+                candidates.append(word)
             i += 1
 
         unique_candidates = []
         for c in candidates:
-            if c not in unique_candidates and c not in self.NON_OBJECT_WORDS:
+            if c not in unique_candidates and c not in self.STOP_WORDS:
                 unique_candidates.append(c)
 
         return unique_candidates
@@ -363,7 +379,15 @@ class DescriptionHallucinationVerifier:
         annotated_desc = description
         for h_obj in hallucinated_objects:
             pattern = re.compile(rf"\b{re.escape(h_obj)}\b", re.IGNORECASE)
-            annotated_desc = pattern.sub(f"[HALLUCINATED: {h_obj}]", annotated_desc)
+            if pattern.search(annotated_desc):
+                annotated_desc = pattern.sub(f"[HALLUCINATED: {h_obj}]", annotated_desc)
+            else:
+                for inflected, canonical in self.ACTION_MAP.items():
+                    if canonical == h_obj:
+                        inf_pat = re.compile(rf"\b{re.escape(inflected)}\b", re.IGNORECASE)
+                        if inf_pat.search(annotated_desc):
+                            annotated_desc = inf_pat.sub(f"[HALLUCINATED: {inflected}]", annotated_desc)
+                            break
 
         return {
             "model_used": "Proposed Model (Instruction Contrastive Decoding - Wang et al., ACL 2024)" if model_mode == "proposed" else "Base Model (Baseline Uncalibrated)",
